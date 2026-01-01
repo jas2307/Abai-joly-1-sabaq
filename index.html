@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Абай Жолы: Толық Тараулар Тесті</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Mono&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* --- НЕГІЗГІ СТИЛЬДЕР --- */
+        body {
+            background-color: #0a0a0a;
+            font-family: 'PT Mono', monospace;
+            overflow: hidden;
+            color: #dcdcdc;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        .film-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #14100c;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ескі пленка эффектілері */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.9) 100%);
+        }
+
+        .grain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 40;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .scratch {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 45;
+            opacity: 0;
+        }
+        
+        .scratch:nth-child(1) { left: 20%; animation: scratchAnim 10s infinite linear; }
+        .scratch:nth-child(2) { left: 70%; animation: scratchAnim 15s infinite linear 5s; }
+
+        @keyframes scratchAnim {
+            0% { opacity: 0; transform: translateX(0); }
+            2% { opacity: 0.2; }
+            4% { opacity: 0; transform: translateX(20px); }
+            100% { opacity: 0; }
+        }
+
+        /* --- СЛАЙДТАР --- */
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+            padding: 2rem;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            height: 85vh; 
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            overflow-y: auto;
+            padding-right: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: #5d4037 #1a1a1a;
+        }
+
+        .slide.active { display: flex; }
+
+        .typing-cursor::after {
+            content: '█';
+            display: inline-block;
+            margin-left: 2px;
+            animation: blink 0.8s infinite;
+            color: #deb887;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* --- ТИПОГРАФИКА --- */
+        h1, h2, h3 {
+            font-family: 'PT Serif', serif;
+            color: #e6e6e6;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        h1 { font-size: 2.2rem; border-bottom: 3px double #5d4037; padding-bottom: 15px; width: 100%; text-transform: uppercase; }
+        h2 { font-size: 1.8rem; color: #deb887; margin-top: 10px; }
+        
+        p, li {
+            font-family: 'PT Serif', serif;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        .highlight { color: #deb887; font-weight: bold; border-bottom: 1px dotted #deb887; }
+        
+        .quote {
+            font-family: 'PT Serif', serif;
+            font-style: italic;
+            border-left: 4px solid #deb887;
+            padding-left: 20px;
+            margin: 25px 0;
+            background: rgba(222, 184, 135, 0.05);
+            padding: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* --- TIMELINE --- */
+        .timeline {
+            position: relative;
+            width: 100%;
+            text-align: left;
+            margin-top: 20px;
+            border-left: 2px solid #5d4037;
+            padding-left: 20px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed rgba(93, 64, 55, 0.3);
+            animation: softFadeIn 0.8s ease-out;
+        }
+
+        .timeline-title {
+            font-family: 'PT Mono', monospace;
+            font-size: 1.2rem;
+            color: #deb887;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .timeline-title::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            background: #deb887;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #deb887;
+        }
+
+        .timeline-desc {
+            font-size: 1rem;
+            color: #ccc;
+            margin-left: 5px;
+        }
+
+        /* --- ПОРТРЕТ --- */
+        .portrait-frame {
+            width: 320px;
+            height: auto;
+            border: 12px solid #2e1d15;
+            padding: 10px;
+            background: #dcdcdc;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+            margin: 0 auto 30px auto;
+            transform: rotate(-1deg);
+            filter: sepia(20%) contrast(1.1);
+        }
+        .portrait-frame img { width: 100%; display: block; border: 1px solid #555; }
+
+        /* --- БАСҚАРУ --- */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .controls button {
+            pointer-events: auto;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #777;
+            color: #aaa;
+            padding: 10px 20px;
+            font-family: 'PT Mono', monospace;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .controls button:active { transform: translateY(2px); border-color: #deb887; }
+        .controls button:hover { border-color: #deb887; color: #deb887; background: rgba(222, 184, 135, 0.1); }
+
+        #audio-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.8rem;
+            z-index: 101;
+            border: 1px solid #5d4037;
+            color: #8d6e63;
+            background: transparent;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'PT Mono', monospace;
+        }
+
+        /* --- ТЕСТ СТИЛДЕРІ --- */
+        .quiz-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border: 1px dashed #5d4037;
+            margin-top: 20px;
+            animation: softFadeIn 0.5s ease-out;
+        }
+        
+        .question-text { 
+            font-size: 1.3rem; color: #fff; margin-bottom: 20px; font-family: 'PT Serif', serif;
+            visibility: visible !important;
+        }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        .option-btn {
+            background: #1f1a17; border: 1px solid #3e2723; color: #dcdcdc; padding: 15px; text-align: left;
+            cursor: pointer; transition: 0.1s; font-family: 'PT Serif', serif; font-size: 1rem;
+            visibility: visible !important;
+        }
+        
+        .option-btn:hover { background: #2e2622; border-color: #deb887; }
+        .option-btn.correct { background: #1b5e20 !important; border-color: #4caf50 !important; color: white; }
+        .option-btn.wrong { background: #7f1d1d !important; border-color: #f44336 !important; color: white; }
+        
+        .result-box { border: 4px double #deb887; padding: 40px; background: #000; margin-top: 50px; animation: softFadeIn 0.5s; }
+        .score-display { font-size: 4rem; color: #deb887; font-family: 'PT Mono', monospace; margin: 20px 0; border-bottom: 2px solid #555; display: inline-block; }
+
+        @keyframes softFadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .type-target { visibility: hidden; }
+
+        .footer-signature {
+            margin-top: 4rem;
+            font-size: 0.8rem;
+            color: #666;
+            font-family: 'PT Mono', monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+            width: 100%;
+            visibility: visible !important;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="film-container">
+    <div class="vignette"></div>
+    <div class="grain"></div>
+    <div class="scratch"></div>
+    <div class="scratch"></div>
+
+    <button id="audio-btn" onclick="toggleProjectorSound()">🔊 Дыбысты қосу</button>
+
+    <div class="content-area">
+        
+        <!-- 1. Кіріспе -->
+        <div class="slide active">
+            <div class="portrait-frame">
+                <img src="https://egemen.kz/media/2022/08/07/mukhtar-auezov-01.jpg?width=1300&height=700" alt="Мұхтар Әуезов">
+            </div>
+            <h1 class="type-target">КІРІСПЕ: ҒАСЫРЛЫҚ ТУЫНДЫ</h1>
+            <p class="type-target">«Абай жолы» (Кіріспе). «Ғасырлық туынды» бөлімі халқымыздың біртуар ұлы, заманымыздың заңғар жазушысы <span class="highlight">Мұхтар Омарханұлы Әуезовтің</span> «Абай жолы» роман-эпопеясына арналады.</p>
+            <div class="quote type-target">"Абай арқылы әлем қазақты таниды. Қазақтың тарихы мен мәдениетін, әдебиетін түйсінеді."</div>
+        </div>
+
+        <!-- 2. Өмірбаян -->
+        <div class="slide">
+            <h2 class="type-target">МҰХТАР ОМАРХАНҰЛЫ ӘУЕЗОВ</h2>
+            <p class="text-center text-gray-500 mb-4 type-target">(1897-1961)</p>
+            <ul class="text-left w-full max-w-3xl list-disc pl-5">
+                <li class="type-target"><strong>Туған жері:</strong> Шығыс Қазақстан облысы, Абай ауданы, Бөрілі ауылы.</li>
+                <li class="type-target"><strong>Атасының рөлі:</strong> Атасы Әуез оған <span class="highlight">алты жастан бастап</span> Абайдың өлеңдерін жаттатқан.</li>
+                <li class="type-target"><strong>Білімі:</strong> Семей мұғалімдер семинариясы, Ленинград мемлекеттік университеті.</li>
+            </ul>
+        </div>
+
+        <!-- 3. Шығармашылық -->
+        <div class="slide">
+            <h2 class="type-target">ШЫҒАРМАШЫЛЫҚ БАСТАУЫ</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left w-full">
+                <div>
+                    <h3 class="type-target text-xl border-b border-gray-600 mb-2">Алғашқы қадамдар</h3>
+                    <p class="type-target"><strong>1917 жыл:</strong> <strong>«Еңлік-Кебек»</strong> пьесасы Ойқұдықта, Әйгерімнің киіз үйінде сахналанды.</p>
+                    <p class="type-target"><strong>1921 жыл:</strong> <strong>«Қорғансыздың күні»</strong> әңгімесі жарияланды.</p>
+                </div>
+                <div>
+                    <h3 class="type-target text-xl border-b border-gray-600 mb-2">Драматургия</h3>
+                    <p class="type-target">Пьесалары: «Айман-Шолпан», «Түнгі сарын», «Абай» трагедиясы.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Жазылу тарихы -->
+        <div class="slide">
+            <h2 class="type-target">РОМАННЫҢ ЖАЗЫЛУЫ</h2>
+            <div class="quote type-target">«Абайдың балалық шағын көрсету үшін Абайды көзбен көрген адамдардың естеліктеріне сүйенуге мәжбүр болдым...»</div>
+            <p class="type-target"><strong>Дереккөздер:</strong> Халық жады, көз көрген қариялардың естеліктері, автордың өзінің сол ортада өсуі.</p>
+        </div>
+
+        <!-- 5. Хронология -->
+        <div class="slide">
+            <h2 class="type-target">ҒАСЫРҒА СОЗЫЛҒАН ЖОЛ</h2>
+            <div class="w-full max-w-lg border-l-2 border-white pl-6 space-y-4 text-left">
+                <p class="type-target"><span class="highlight">1942 жыл:</span> 1-кітап жарық көрді.</p>
+                <p class="type-target"><span class="highlight">1947 жыл:</span> 2-кітап жарыққа шықты.</p>
+                <p class="type-target"><span class="highlight">1949 жыл:</span> Сталиндік сыйлық.</p>
+                <p class="type-target"><span class="highlight">1954 жыл:</span> Эпопея толық аяқталды (4 том).</p>
+            </div>
+        </div>
+
+        <!-- 6. Баға -->
+        <div class="slide">
+            <h2 class="type-target">БАҒА ЖӘНЕ МҰРА</h2>
+            <div class="quote type-target">«Бұл кітапты ғалым-филолог та, этнограф та жанап өте алмайды. Бұл – қазақ өмірінің энциклопедиясы.»<br><strong>— Қаныш Сәтбаев</strong></div>
+            <p class="type-target"><strong>Жанр:</strong> Эпопея – бүкіл дәуірді қамтитын кең тынысты шығарма.</p>
+        </div>
+
+        <!-- 7. І КІТАП -->
+        <div class="slide">
+            <h1>І КІТАП: АБАЙДЫҢ ӨСУ ЖОЛЫ</h1>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-title">Қайтқанда</div>
+                    <div class="timeline-desc">13 жасар Абай ауылға қайтады. Қодар мен Қамқа жазаланады. Барлас пен Байкөкше ақындар қонаққа келеді.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Қат-қабатта</div>
+                    <div class="timeline-desc">Елде көш-қон. Жер дауы ушығады. Бөжейге дүре соғылады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Жолда</div>
+                    <div class="timeline-desc">Абай Қарқаралыға жол алады, Шөже ақынды көреді. Құнанбай мен Бөжей татуласады. Бөжей Кәмшатты алады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Шытырманда</div>
+                    <div class="timeline-desc">Абай жер мәселесіне араласады. Тоғжанды кездестіреді. Кәмшат қайтыс болады. Бөжей дүниеден өтеді.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Бел-белесте</div>
+                    <div class="timeline-desc">Рулар арасында үш күндік шайқас. Құнанбай тергеуге алынады. Тоғжан мен Абай кездеседі.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Өрде</div>
+                    <div class="timeline-desc">Ұлжан Ділдәнің ауылына құдалыққа барады. Абай Бөжей асына қатысады. Тоғжанмен соңғы кездесу.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Қияда</div>
+                    <div class="timeline-desc">Абай 17 жаста әке атанады. Жұт болады. Зере қайтыс болады. Тәкежан болыс болып сайланады.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. ІІ КІТАП -->
+        <div class="slide">
+            <h1>ІІ КІТАП: АҚЫНДЫҚТЫҢ ШЫҢЫ</h1>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-title">Тайғақта</div>
+                    <div class="timeline-desc">Құнанбай қажылыққа кетеді. Абай Әйгерімге (Шүкіман) ғашық болып, құда түседі.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Жайлауда</div>
+                    <div class="timeline-desc">Ауылға Біржан сал келеді. Оралбай мен Керімбала оқиғасы рулық тартысқа ұласады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Еңісте</div>
+                    <div class="timeline-desc">Абай Ақшоқыға отау тігеді. Ералыдағы сайлау. Оралбайдың бүлігі. Абай абақтыға түсіп, Салтанат оны шығарып алады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Оқапта</div>
+                    <div class="timeline-desc">Дүтбай мен Үмітей тойы. Құнанбай Әмірді жазаламақ болады. Абай аңшылықта адасып, Тоғжанды көреді.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Асуда</div>
+                    <div class="timeline-desc">Александр ІІІ таққа отырады. Тәкежан мен Дәркембай арасындағы мал дауы.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Тарауда</div>
+                    <div class="timeline-desc">Балқыбектегі сияз. Абай Дәркембайдың малын қайтартады. Абай балаларын орысша оқуға береді.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Биікте / Эпилог</div>
+                    <div class="timeline-desc">Татьянаның әні қырға таралады. Халық Абайды мақтаныш тұтады.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. ІІІ КІТАП -->
+        <div class="slide">
+            <h1>ІІІ КІТАП: АҒА СҰЛТАН ЖОЛЫ</h1>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-title">Абай аға</div>
+                    <div class="timeline-desc">Шұбар мен Дәрменнің "Еңлік-Кебек" дауы. Жігітектің шөбін Әзімбай ордырады. Базаралы айдаудан қайтады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Кек жолында</div>
+                    <div class="timeline-desc">Базаралы 40 жігіт жинап, Тәкежанның 800 жылқысын елге таратады. Исаның өлімі.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Қарашығын</div>
+                    <div class="timeline-desc">Әбіш оқудан қайтады. Далбай мен Дүйсен қарашығын жинайды.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Өкініште</div>
+                    <div class="timeline-desc">Әбіш пен Мағрипа. Қоңырәулиеге сапар. Оразбай мен Оспан арасындағы қақтығыс шиеленіседі.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Қақтығыста</div>
+                    <div class="timeline-desc">Оспан қайтыс болады. Орыс қоныстанушылары келеді. Үлкен шайқастар басталады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Қоршауда</div>
+                    <div class="timeline-desc">Оспанның малы бөліске салынады. Абай жалғыз қалады.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. IV КІТАП -->
+        <div class="slide">
+            <h1>IV КІТАП: ТҮН-ТҮНЕК</h1>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-title">Түн-түнекте</div>
+                    <div class="timeline-desc">Қалада оба ауруы тарайды. Сармолла халфе өлтіріледі.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Құз-қияда</div>
+                    <div class="timeline-desc">Дәрмен мен Мәкен қашады. Тарамдағы шайқас. Мәкен Дайырдан құтылады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Қапада</div>
+                    <div class="timeline-desc">Дәркембай өмірден озады. Абайдың үміті Әбіш қайтыс болады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Қастықта</div>
+                    <div class="timeline-desc">Тобықты мен Уақ (Серке) арасындағы жер дауы. Тұщыкөл шайқасы. Абайға қастандық жасалады.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Шайқаста</div>
+                    <div class="timeline-desc">Сейіт үшін Оразбай ауылы талқандалады. Павлов Абайға болашаққа үміт сыйлайды.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-title">Жұтта / Эпилог</div>
+                    <div class="timeline-desc">Мағаш, Базаралы, Ербол өмірден өтеді. Абай дүние салады. Халық ақынды жоқтайды.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. ТЕСТ БАСТАУ -->
+        <div class="slide" id="quiz-start-slide">
+            <h2>БІЛІМДІ ТЕКСЕРУ</h2>
+            <p>Берілген материалдар бойынша 30 сұрақтық тест.</p>
+            <button onclick="playClick(); startQuiz()" style="margin-top:20px; font-size: 1.5rem; padding: 15px 40px; border: 2px solid #deb887; background: transparent; color: #deb887; cursor: pointer;">ТЕСТТІ БАСТАУ</button>
+        </div>
+
+        <!-- 12. ТЕСТ ПРОЦЕСІ -->
+        <div class="slide" id="quiz-active-slide">
+            <h2 id="question-number">Сұрақ 1 / 30</h2>
+            <div class="quiz-container">
+                <p class="question-text" id="question-text">Сұрақ...</p>
+                <div class="options-grid" id="options-container"></div>
+            </div>
+        </div>
+
+        <!-- 13. НӘТИЖЕ -->
+        <div class="slide" id="quiz-result-slide">
+            <div class="result-box">
+                <h1>ТЕСТ АЯҚТАЛДЫ</h1>
+                <p>Сіздің нәтижеңіз:</p>
+                <div class="score-display" id="final-score">0 / 30</div>
+                <p id="feedback-text" style="font-size: 1.5rem; margin-top: 20px; color: #fff;">Нәтиже</p>
+                <button onclick="playClick(); restartQuiz()" style="margin-top:20px; font-size: 1.2rem; padding: 10px 30px; border: 1px solid #777; background: #222; color: #fff; cursor: pointer;">Қайта тапсыру</button>
+            </div>
+            <div class="footer-signature">2026 жыл. JA hub.</div>
+        </div>
+
+    </div>
+
+    <!-- Навигация -->
+    <div class="controls" id="nav-controls">
+        <button onclick="playClick(); changeSlide(-1)">&#8592; Артқа</button>
+        <button onclick="playClick(); changeSlide(1)">Алға &#8594;</button>
+    </div>
+
+</div>
+
+<script>
+    // --- СҰРАҚТАР (30 ДАНА) ---
+    const questions = [
+        // Автор туралы
+        { q: "Мұхтар Әуезов қай жылы дүниеге келген?", options: ["1845 ж", "1897 ж", "1900 ж", "1904 ж"], correct: 1 },
+        { q: "Мұхтарға кім Абай өлеңдерін жаттатқан?", options: ["Әкесі Омархан", "Атасы Әуез", "Анасы Нұржамал", "Абайдың өзі"], correct: 1 },
+        { q: "М. Әуезовтің алғашқы пьесасы?", options: ["Айман-Шолпан", "Еңлік-Кебек", "Түнгі сарын", "Қарагөз"], correct: 1 },
+        { q: "1949 жылы роман қандай марапат алды?", options: ["Лениндік сыйлық", "Сталиндік сыйлық", "Нобель сыйлығы", "Мемлекеттік сыйлық"], correct: 1 },
+        { q: "«Абай жолы» романын «қазақ өмірінің энциклопедиясы» деп кім атады?", options: ["Сәбит Мұқанов", "Ғабит Мүсірепов", "Қаныш Сәтбаев", "Мәлік Ғабдуллин"], correct: 2 },
+        // І кітап
+        { q: "«Қайтқанда» тарауында жазаланған кейіпкерлер?", options: ["Қодар мен Қамқа", "Еңлік пен Кебек", "Оспан мен Смағұл", "Байкөкше мен Барлас"], correct: 0 },
+        { q: "«Қат-қабатта» бөлімінде кімге дүре соғылады?", options: ["Құнанбайға", "Бөжейге", "Сүйіндікке", "Тәкежанға"], correct: 1 },
+        { q: "Бөжей Құнанбайдан кімді тәрбиелеуге алып кетеді?", options: ["Абайды", "Оспанды", "Кәмшатты", "Тәкежанды"], correct: 2 },
+        { q: "Абай Тоғжанды алғаш қай жерде көреді («Шытырманда»)?", options: ["Түйеөркеште", "Шыңғыстауда", "Ақшоқыда", "Ералыда"], correct: 0 },
+        { q: "«Бел-белесте» Құнанбайды тұтқындаған шенеунік?", options: ["Лосовский", "Чернов", "Майыр", "Андреев"], correct: 1 },
+        { q: "Абай қай тарауда Бөжейдің асына қатысады?", options: ["Қайтқанда", "Өрде", "Қияда", "Жолда"], correct: 1 },
+        { q: "«Қияда» бөлімінде болыс болып кім сайланады?", options: ["Абай", "Құнанбай", "Тәкежан", "Бөжей"], correct: 2 },
+        // ІІ кітап
+        { q: "Құнанбай қажылыққа қай тарауда аттанады?", options: ["Тайғақта", "Жайлауда", "Еңісте", "Оқапта"], correct: 0 },
+        { q: "Абай Әйгерімге (Шүкіманға) қайда кездеседі?", options: ["Жайлауда", "Тайғақта (Бекей ауылында)", "Оқапта", "Еңісте"], correct: 1 },
+        { q: "Абай ауылына келген атақты әнші?", options: ["Ақан сері", "Біржан сал", "Жаяу Мұса", "Кенен Әзірбаев"], correct: 1 },
+        { q: "Абайды абақтыдан (каталашка) кім кепіл төлеп шығарады?", options: ["Әйгерім", "Салтанат", "Тоғжан", "Ділдә"], correct: 1 },
+        { q: "«Асуда» бөлімінде Тәкежан кімнің егінін таптатады?", options: ["Базаралының", "Дәркембайдың", "Оспанның", "Көкбайдың"], correct: 1 },
+        { q: "Абай балаларын орыс оқуына қай тарауда береді?", options: ["Тарауда", "Биікте", "Асуда", "Оқапта"], correct: 0 },
+        { q: "«Биікте» тарауында шырқалатын ән кімдікі?", options: ["Татьянаның әні", "Біржанның әні", "Абайдың әні", "Халық әні"], correct: 0 },
+        // ІІІ кітап
+        { q: "«Еңлік-Кебекті» жазуға таласқан ақындар («Абай аға»)?", options: ["Көкбай мен Ақылбай", "Шұбар мен Дәрмен", "Мағаш пен Тұрағұл", "Әріп пен Әсет"], correct: 1 },
+        { q: "Айдаудан қашып келген батыр?", options: ["Иса", "Базаралы", "Жомарт", "Дос"], correct: 1 },
+        { q: "«Кек жолында» Базаралы Тәкежанның неше жылқысын таратады?", options: ["500", "800", "1000", "300"], correct: 1 },
+        { q: "Оқудан оралған Абайдың інісі («Қарашығын»)?", options: ["Шәкәрім", "Әбіш", "Мағаш", "Кәкітай"], correct: 1 },
+        { q: "Оспан қайтыс болған тарау?", options: ["Өкініште", "Қақтығыста", "Қоршауда", "Кек жолында"], correct: 1 },
+        // IV кітап
+        { q: "IV кітапта қалада тараған ауру?", options: ["Шешек", "Оба", "Сүзек", "Тырысқақ"], correct: 1 },
+        { q: "«Құз-қияда» Дәрмен мен Мәкен кімнен қашады?", options: ["Оразбайдан", "Дайырдан", "Тәкежаннан", "Жиреншеден"], correct: 1 },
+        { q: "«Қапада» бөлімінде қайтыс болған Абайдың үміті?", options: ["Ақылбай", "Әбіш", "Мағаш", "Тұрағұл"], correct: 1 },
+        { q: "Абайға қастандық жасаған кім («Қастықта»)?", options: ["Оразбай", "Сәмен", "Әзімбай", "Жиренше"], correct: 1 },
+        { q: "Оразбай ауылы кім үшін талқандалады («Шайқаста»)?", options: ["Сейіт үшін", "Мәкен үшін", "Базаралы үшін", "Әбіш үшін"], correct: 0 },
+        { q: "Романның ең соңғы бөлімі қалай аталады?", options: ["Қияда", "Биікте", "Қоршауда", "Жұтта / Эпилог"], correct: 3 }
+    ];
+
+    // --- АУДИО ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = new AudioContext();
+
+    function initAudio() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playClick() {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playSound(type) {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'finish') {
+            [440, 554, 659].forEach((freq, i) => {
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = 'triangle';
+                o.frequency.value = freq;
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                g.gain.value = 0.05;
+                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+                o.start(audioCtx.currentTime + i * 0.1);
+                o.stop(audioCtx.currentTime + 2);
+            });
+        }
+    }
+
+    function toggleProjectorSound() { initAudio(); }
+
+    // --- TYPEWRITER (ТЕК 1-6 СЛАЙДТАР ҮШІН) ---
+    const slideOriginalHTML = new Map();
+    let typingTimeouts = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.slide').forEach((slide, index) => {
+            if (index < 6) {
+                const targets = slide.querySelectorAll('.type-target');
+                if (targets.length > 0) {
+                    slideOriginalHTML.set(index, Array.from(targets).map(t => t.innerHTML));
+                    targets.forEach(t => t.innerHTML = ''); 
+                }
+            }
+        });
+        showSlide(0);
+    });
+
+    function typeHTML(element, html, speed = 10, callback) {
+        element.innerHTML = '';
+        element.style.visibility = 'visible';
+        element.classList.add('typing-cursor');
+        
+        const parts = html.match(/<[^>]+>|[^<]+/g) || [];
+        let queue = [];
+        parts.forEach(part => {
+            if (part.startsWith('<')) queue.push(part); 
+            else part.split('').forEach(char => queue.push(char)); 
+        });
+
+        function typeLoop() {
+            if (queue.length === 0) {
+                element.classList.remove('typing-cursor');
+                if (callback) callback();
+                return;
+            }
+            const item = queue.shift();
+            element.innerHTML += item;
+            let delay = item.startsWith('<') ? 0 : speed;
+            const timeout = setTimeout(typeLoop, delay);
+            typingTimeouts.push(timeout);
+        }
+        typeLoop();
+    }
+
+    function startSlideTyping(slideIndex) {
+        typingTimeouts.forEach(clearTimeout);
+        typingTimeouts = [];
+
+        const slide = slides[slideIndex];
+        const targets = slide.querySelectorAll('.type-target');
+        const originals = slideOriginalHTML.get(slideIndex);
+
+        if (!originals || targets.length === 0) return;
+
+        targets.forEach(t => {
+            t.innerHTML = '';
+            t.style.visibility = 'hidden';
+            t.classList.remove('typing-cursor');
+        });
+
+        let currentTargetIndex = 0;
+        function typeNextTarget() {
+            if (currentTargetIndex >= targets.length) return;
+            const el = targets[currentTargetIndex];
+            const html = originals[currentTargetIndex];
+            typeHTML(el, html, 15, () => {
+                currentTargetIndex++;
+                typeNextTarget();
+            });
+        }
+        typeNextTarget();
+    }
+
+    // --- NAVIGATION ---
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const navControls = document.getElementById('nav-controls');
+
+    function showSlide(n) {
+        slides.forEach(s => s.classList.remove('active'));
+        slides[n].classList.add('active');
+        
+        if (slides[n].id === 'quiz-active-slide' || slides[n].id === 'quiz-result-slide') {
+            navControls.style.display = 'none';
+        } else {
+            navControls.style.display = 'flex';
+        }
+
+        if(n < 6 && slides[n].querySelectorAll('.type-target').length > 0) {
+            startSlideTyping(n);
+        }
+    }
+
+    function changeSlide(d) {
+        let next = currentSlide + d;
+        if (next < 0) next = 0;
+        if (next >= slides.length) next = slides.length - 1;
+        
+        if (slides[next].id === 'quiz-result-slide' && quizScore === 0 && currentQIndex === 0) return;
+
+        currentSlide = next;
+        showSlide(currentSlide);
+    }
+
+    // --- QUIZ ---
+    let currentQIndex = 0;
+    let quizScore = 0;
+    let isAnswering = false;
+
+    function startQuiz() {
+        currentQIndex = 0;
+        quizScore = 0;
+        currentSlide++; 
+        showSlide(currentSlide);
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const qData = questions[currentQIndex];
+        const qNumEl = document.getElementById('question-number');
+        const qTextEl = document.getElementById('question-text');
+        
+        qNumEl.innerText = `Сұрақ ${currentQIndex + 1} / ${questions.length}`;
+        qTextEl.innerText = qData.q;
+
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+
+        qData.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(index, btn);
+            optsContainer.appendChild(btn);
+        });
+        isAnswering = true;
+    }
+
+    function checkAnswer(selectedIndex, btnElement) {
+        if (!isAnswering) return;
+        isAnswering = false;
+        const correctIndex = questions[currentQIndex].correct;
+        const allBtns = document.querySelectorAll('.option-btn');
+        if (selectedIndex === correctIndex) {
+            btnElement.classList.add('correct'); playSound('correct'); quizScore++;
+        } else {
+            btnElement.classList.add('wrong'); allBtns[correctIndex].classList.add('correct'); playSound('wrong');
+        }
+        setTimeout(() => {
+            currentQIndex++;
+            if (currentQIndex < questions.length) renderQuestion();
+            else finishQuiz();
+        }, 1500);
+    }
+
+    function finishQuiz() {
+        currentSlide++; showSlide(currentSlide); playSound('finish');
+        document.getElementById('final-score').innerText = `${quizScore} / ${questions.length}`;
+        const feedback = document.getElementById('feedback-text');
+        
+        let text = "";
+        if (quizScore === 30) text = "Керемет! (100%)";
+        else if (quizScore >= 25) text = "Өте жақсы нәтиже!";
+        else if (quizScore >= 15) text = "Жақсы нәтиже!";
+        else text = "Талпына түсіңіз.";
+        
+        feedback.innerText = text;
+    }
+
+    function restartQuiz() {
+        currentSlide = 0; showSlide(0);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        const activeSlide = slides[currentSlide];
+        if (activeSlide.id === 'quiz-active-slide' || activeSlide.id === 'quiz-result-slide') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') { playClick(); changeSlide(1); }
+        else if (e.key === 'ArrowLeft') { playClick(); changeSlide(-1); }
+    });
+
+</script>
+
+</body>
+</html>
